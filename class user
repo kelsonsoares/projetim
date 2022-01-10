@@ -1,0 +1,45 @@
+<?php
+
+Class Usuario
+{
+	private $pdo;
+	public $msgErro = "";//tudo ok
+
+	public function conectar($nome, $host, $usuario, $senha)
+	{
+		global $pdo;
+		try 
+		{
+			$pdo = new PDO("mysql:dbname=".$nome,$usuario,$senha);
+		} catch (PDOException $e) {
+			$msgErro = $e->getMessage();
+		}
+	}
+
+	public function cadastrar($usuario, $senha, $curso, $email)
+	{
+		global $pdo;
+		//verificar se ja existe o email cadastrado
+		$sql = $pdo->prepare("SELECT usuario_id FROM usuario WHERE email = :e");
+		$sql->bindValue(":e",$email);
+		$sql->execute();
+		if($sql->rowCount() > 0)
+		{
+			return false; //ja esta cadastrado
+		}
+		else
+		{
+			//se não, Cadastrar
+			$sql = $pdo->prepare("INSERT INTO usuario (usuario, senha, curso, email) VALUES (:n, :s, :c, :e)");
+			$sql->bindValue(":n",$usuario);
+			$sql->bindValue(":s",md5($senha));
+			$sql->bindValue(":c",$curso);
+			$sql->bindValue(":e",$email);
+			
+			$sql->execute();
+			return true; //tudo ok
+		}
+	}
+}
+
+?>
